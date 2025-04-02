@@ -7,6 +7,7 @@ from backend.script_runner import ScriptRunner
 from .components.preset_list import PresetList
 from .components.overlay_manager import OverlayManager
 from .components.cooldown_tracker import CooldownTracker
+from .components.autoclicker import AutoClicker
 
 class LineagePlusApp(tk.Tk):
     def __init__(self):
@@ -197,3 +198,19 @@ class LineagePlusApp(tk.Tk):
         if preset:
             self.script_runner.run_scripts(preset['scripts'])
             messagebox.showinfo("Success", f"Running {self.current_preset}!")
+
+    def _setup_tools_panel(self, parent):
+        right_panel = ttk.Frame(parent, width=300)
+        right_panel.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Existing tools
+        self.overlay_manager = OverlayManager(self)
+        self.cooldown_tracker = CooldownTracker(self)
+        
+        # New autoclicker
+        self.autoclicker = AutoClicker(self)
+        
+        # Pack in order
+        self.overlay_manager.create_ui(right_panel)
+        self.cooldown_tracker.create_ui(right_panel)
+        self.autoclicker.create_ui(right_panel)  # Added below cooldown tracker
