@@ -11,8 +11,17 @@ from .components.cooldown_tracker import CooldownTracker
 class LineagePlusApp(tk.Tk):
     def __init__(self):
         super().__init__()
+        
+        # First set the color variables
+        self._setup_colors()
+        
+        # Then configure styles (which uses the colors)
+        self._configure_styles()
+        
+        # Then proceed with rest of initialization
         self.title("Lineage+")
-        self.geometry("1200x600")
+        self.geometry("1200x800")
+        self.configure(bg=self.bg_color)
         
         # Initialize backend services
         self.preset_manager = PresetManager(presets_dir="presets", scripts_dir="scripts")
@@ -25,81 +34,273 @@ class LineagePlusApp(tk.Tk):
         self._setup_ui()
         self._refresh_presets()
 
+    def _setup_colors(self):
+        """Define all color variables"""
+        self.bg_color = "#1a1a1a"
+        self.frame_bg = "#2d2d2d"
+        self.text_color = "#ffffff"
+        self.accent_color = "#4a00e0"
+        self.button_color = "#4a00e0"
+        self.button_hover = "#6a1b9a"
+
+    def _configure_styles(self):
+        """Configure ttk styles for dark theme"""
+        style = ttk.Style()
+        
+        # Frame styles
+        style.configure('TFrame', background=self.bg_color)
+        style.configure('Custom.TFrame', background=self.frame_bg)
+        
+        # Label styles
+        style.configure(
+            'TLabel',
+            background=self.bg_color,
+            foreground=self.text_color,
+            font=('Arial', 10)
+        )
+        
+        # Button styles
+        style.configure(
+            'TButton',
+            background=self.button_color,
+            foreground=self.text_color,
+            borderwidth=0,
+            font=('Arial', 10)
+        )
+        style.map(
+            'TButton',
+            background=[('active', self.button_hover)],
+            foreground=[('active', self.text_color)]
+        )
+        
+        # Treeview style
+        style.configure('Preset.Treeview', 
+                       background=self.frame_bg,
+                       foreground=self.text_color,
+                       fieldbackground=self.frame_bg)
+        style.map('Preset.Treeview',
+                 background=[('selected', self.accent_color)])
+
     def _setup_ui(self):
-        """Initialize all UI components"""
-        # Main container
-        main_frame = ttk.Frame(self)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        """Initialize all UI components with new design"""
+        # Header
+        self._create_header()
         
-        # Left Panel - Presets
-        self._setup_preset_panel(main_frame)
+        # Main container with 3 boxes
+        self._create_main_panels()
         
-        # Middle Panel - Scripts
-        self._setup_script_panel(main_frame)
+        # Bottom control panel
+        self._create_bottom_panel()
+
+    def _create_header(self):
+        """Create the Lineage+ header"""
+        header_frame = tk.Frame(self, bg=self.bg_color)
+        header_frame.pack(fill=tk.X, padx=20, pady=(20, 10))
         
-        # Right Panel - Tools
-        self._setup_tools_panel(main_frame)
+        title_label = tk.Label(
+            header_frame,
+            text="LINEAGE+",
+            font=("Arial", 24, "bold"),
+            fg=self.accent_color,
+            bg=self.bg_color
+        )
+        title_label.pack(side=tk.LEFT)
         
-        # Bottom Control Buttons
-        self._setup_control_buttons()
+        # Add any additional header elements here if needed
+
+    def _create_main_panels(self):
+        """Create the 3 main panels (Presets, Scripts, Overlays)"""
+        main_frame = tk.Frame(self, bg=self.bg_color)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        # Configure grid weights
+        main_frame.grid_columnconfigure(0, weight=1)
+        main_frame.grid_columnconfigure(1, weight=1)
+        main_frame.grid_columnconfigure(2, weight=1)
+        main_frame.grid_rowconfigure(0, weight=1)
+        
+        # Panel 1: Presets
+        self._create_panel_with_header(
+            main_frame, 
+            "Presets", 
+            0, 
+            self._setup_preset_panel,
+            add_cmd=self._new_preset,
+            remove_cmd=self._delete_preset
+        )
+        
+        # Panel 2: Scripts
+        self._create_panel_with_header(
+            main_frame, 
+            "Scripts", 
+            1, 
+            self._setup_script_panel,
+            add_cmd=self._add_script_to_preset,
+            remove_cmd=self._remove_selected_script
+        )
+        
+        # Panel 3: Overlays
+        self._create_panel_with_header(
+            main_frame, 
+            "Overlays", 
+            2, 
+            self._setup_overlay_panel,
+            add_cmd=lambda: self.overlay_manager.add_overlay(),
+            remove_cmd=lambda: self.overlay_manager.remove_selected_overlay()
+        )
+
+    def _create_panel_with_header(self, parent, title, column, content_func, add_cmd, remove_cmd):
+        """Helper to create a consistent panel with header and buttons"""
+        panel_frame = tk.Frame(parent, bg=self.frame_bg, bd=0, highlightthickness=0)
+        panel_frame.grid(row=0, column=column, sticky="nsew", padx=10, pady=5)
+        
+        # Header with title and buttons
+        header = tk.Frame(panel_frame, bg=self.frame_bg)
+        header.pack(fill=tk.X, padx=5, pady=5)
+        
+        title_label = tk.Label(
+            header,
+            text=title.upper(),
+            font=("Arial", 10, "bold"),
+            fg=self.text_color,
+            bg=self.frame_bg
+        )
+        title_label.pack(side=tk.LEFT)
+        
+        # Add and remove buttons
+        btn_frame = tk.Frame(header, bg=self.frame_bg)
+        btn_frame.pack(side=tk.RIGHT)
+        
+        add_btn = tk.Button(
+            btn_frame,
+            text="+",
+            font=("Arial", 8, "bold"),
+            width=2,
+            bg=self.button_color,
+            fg=self.text_color,
+            activebackground=self.button_hover,
+            activeforeground=self.text_color,
+            relief=tk.FLAT,
+            command=add_cmd
+        )
+        add_btn.pack(side=tk.LEFT, padx=2)
+        
+        remove_btn = tk.Button(
+            btn_frame,
+            text="-",
+            font=("Arial", 8, "bold"),
+            width=2,
+            bg="#d32f2f",
+            fg=self.text_color,
+            activebackground="#b71c1c",
+            activeforeground=self.text_color,
+            relief=tk.FLAT,
+            command=remove_cmd
+        )
+        remove_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Panel content
+        content_func(panel_frame)
 
     def _setup_preset_panel(self, parent):
-        """Left panel with preset list"""
-        left_panel = ttk.Frame(parent, width=200)
-        left_panel.pack(side=tk.LEFT, fill=tk.Y)
-        
+        """Presets panel content"""
         self.preset_list = PresetList(
-            left_panel, 
+            parent, 
             on_preset_select=self._on_preset_select
         )
-        self.preset_list.pack(fill=tk.BOTH, expand=True)
+        self.preset_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=(0, 5))
 
     def _setup_script_panel(self, parent):
-        """Middle panel with script list"""
-        middle_panel = ttk.LabelFrame(parent, text="Preset Scripts")
-        middle_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
+        """Scripts panel content"""
         # Script listbox with scrollbar
-        self.script_listbox = tk.Listbox(
-            middle_panel,
-            selectmode=tk.EXTENDED,
-            height=10
-        )
-        scrollbar = ttk.Scrollbar(middle_panel)
+        list_frame = tk.Frame(parent, bg=self.frame_bg)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=(0, 5))
+        
+        scrollbar = ttk.Scrollbar(list_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.script_listbox = tk.Listbox(
+            list_frame,
+            selectmode=tk.EXTENDED,
+            bg=self.frame_bg,
+            fg=self.text_color,
+            selectbackground=self.accent_color,
+            highlightthickness=0,
+            yscrollcommand=scrollbar.set
+        )
         self.script_listbox.pack(fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.script_listbox.yview)
-        self.script_listbox.config(yscrollcommand=scrollbar.set)
 
-    def _setup_tools_panel(self, parent):
-        """Right panel with tools"""
-        right_panel = ttk.Frame(parent, width=300)
-        right_panel.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # Initialize and pack tools
+    def _setup_overlay_panel(self, parent):
+        """Overlays panel content"""
         self.overlay_manager = OverlayManager(self)
-        self.cooldown_tracker = CooldownTracker(self)
-        
-        self.overlay_manager.create_ui(right_panel)
-        self.cooldown_tracker.create_ui(right_panel)
+        self.overlay_manager.create_ui(parent)
 
-    def _setup_control_buttons(self):
-        """Bottom control buttons"""
-        btn_frame = ttk.Frame(self)
-        btn_frame.pack(fill=tk.X, padx=10, pady=5)
+    def _create_bottom_panel(self):
+        """Create the bottom panel with preset info and control buttons"""
+        bottom_frame = tk.Frame(self, bg=self.bg_color)
+        bottom_frame.pack(fill=tk.X, padx=20, pady=(10, 20))
         
-        buttons = [
-            ("New Preset", self._new_preset),
-            ("Delete Preset", self._delete_preset),
-            ("Run Preset", self._run_preset),
-            ("Add Script", self._add_script_to_preset),
-            ("Remove Script", self._remove_selected_script)
-        ]
+        # Current preset info
+        self.current_preset_label = tk.Label(
+            bottom_frame,
+            text="No preset selected",
+            font=("Arial", 10),
+            fg=self.text_color,
+            bg=self.bg_color
+        )
+        self.current_preset_label.pack(side=tk.LEFT, padx=10)
         
-        for text, cmd in buttons:
-            ttk.Button(btn_frame, text=text, command=cmd).pack(side=tk.LEFT, padx=5)
+        # Control buttons
+        btn_frame = tk.Frame(bottom_frame, bg=self.bg_color)
+        btn_frame.pack(side=tk.RIGHT, padx=10)
+        
+        # Play button
+        self.play_btn = tk.Button(
+            btn_frame,
+            text="▶",
+            font=("Arial", 10, "bold"),
+            width=3,
+            bg="#2e7d32",
+            fg=self.text_color,
+            activebackground="#1b5e20",
+            activeforeground=self.text_color,
+            relief=tk.FLAT,
+            command=self._run_preset
+        )
+        self.play_btn.pack(side=tk.LEFT, padx=5)
+        
+        # Pause button
+        self.pause_btn = tk.Button(
+            btn_frame,
+            text="⏸",
+            font=("Arial", 10, "bold"),
+            width=3,
+            bg="#ff8f00",
+            fg=self.text_color,
+            activebackground="#e65100",
+            activeforeground=self.text_color,
+            relief=tk.FLAT,
+            command=self._pause_preset
+        )
+        self.pause_btn.pack(side=tk.LEFT, padx=5)
+        
+        # Stop button
+        self.stop_btn = tk.Button(
+            btn_frame,
+            text="⏹",
+            font=("Arial", 10, "bold"),
+            width=3,
+            bg="#c62828",
+            fg=self.text_color,
+            activebackground="#b71c1c",
+            activeforeground=self.text_color,
+            relief=tk.FLAT,
+            command=self._stop_preset
+        )
+        self.stop_btn.pack(side=tk.LEFT, padx=5)
 
-    # Preset Management Methods
+    # Preset Management Methods (unchanged from original)
     def _refresh_presets(self):
         """Reload presets from disk"""
         self.preset_list.update_items(self.preset_manager.list_presets())
@@ -107,6 +308,7 @@ class LineagePlusApp(tk.Tk):
     def _on_preset_select(self, preset_name: str):
         """Handle preset selection"""
         self.current_preset = preset_name
+        self.current_preset_label.config(text=f"Selected: {preset_name}")
         self._refresh_script_list()
 
     def _refresh_script_list(self):
@@ -122,9 +324,21 @@ class LineagePlusApp(tk.Tk):
         """Create new preset dialog"""
         dialog = tk.Toplevel(self)
         dialog.title("New Preset")
+        dialog.configure(bg=self.bg_color)
         
-        ttk.Label(dialog, text="Preset Name:").pack(pady=5)
-        name_entry = ttk.Entry(dialog)
+        tk.Label(
+            dialog, 
+            text="Preset Name:", 
+            bg=self.bg_color, 
+            fg=self.text_color
+        ).pack(pady=5)
+        
+        name_entry = tk.Entry(
+            dialog, 
+            bg=self.frame_bg, 
+            fg=self.text_color,
+            insertbackground=self.text_color
+        )
         name_entry.pack(pady=5)
         
         def save():
@@ -134,7 +348,16 @@ class LineagePlusApp(tk.Tk):
                 self._refresh_presets()
                 dialog.destroy()
         
-        ttk.Button(dialog, text="Save", command=save).pack(pady=10)
+        tk.Button(
+            dialog, 
+            text="Save", 
+            command=save,
+            bg=self.button_color,
+            fg=self.text_color,
+            activebackground=self.button_hover,
+            activeforeground=self.text_color,
+            relief=tk.FLAT
+        ).pack(pady=10)
 
     def _delete_preset(self):
         """Delete selected preset"""
@@ -147,9 +370,10 @@ class LineagePlusApp(tk.Tk):
         ):
             self.preset_manager.delete_preset(self.current_preset)
             self.current_preset = None
+            self.current_preset_label.config(text="No preset selected")
             self._refresh_presets()
 
-    # Script Management Methods
+    # Script Management Methods (unchanged from original)
     def _add_script_to_preset(self):
         """Add script to current preset"""
         if not self.current_preset:
@@ -197,3 +421,13 @@ class LineagePlusApp(tk.Tk):
         if preset:
             self.script_runner.run_scripts(preset['scripts'])
             messagebox.showinfo("Success", f"Running {self.current_preset}!")
+
+    def _pause_preset(self):
+        """Pause the currently running preset"""
+        # Implement your pause functionality here
+        messagebox.showinfo("Info", "Preset paused")
+
+    def _stop_preset(self):
+        """Stop the currently running preset"""
+        # Implement your stop functionality here
+        messagebox.showinfo("Info", "Preset stopped")
