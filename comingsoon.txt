@@ -1,0 +1,8 @@
+### COMING SOON ###
+
+- Different color styles (GUI customization)
+- downloads count, support me page
+- File name editing
+- Overlays (dragging and locking) (position saving)
+- Custom preset ability cooldowns
+- Built in autoclicker
