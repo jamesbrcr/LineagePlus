@@ -2,9 +2,12 @@ import customtkinter as ctk
 from customtkinter import CTkImage
 from CTkMessagebox import CTkMessagebox # pip install CTkMessagebox
 import tkinter.filedialog as filedialog
+from tkinter import PhotoImage
 from PIL import Image # pip install pillow
 from backend.preset_manager import PresetManager
 from backend.script_runner import ScriptRunner
+from backend.utils import ToolTip
+from frontend.about import AboutPage
 import os
 
 # Set appearance mode and default color theme
@@ -14,6 +17,14 @@ ctk.set_appearance_mode("dark")
 class LineagePlusApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        script_dir = os.path.dirname(__file__)
+        icon_path = os.path.join(script_dir, "images", "white_plus.ico")  # Must be .ico
+
+        if os.path.exists(icon_path):
+            self.after(201, lambda: self.iconbitmap(icon_path))
+        else:
+            print(f"Icon file not found: {icon_path}")
 
         self.preset_manager = PresetManager(presets_dir="presets", scripts_dir="scripts")
         self.script_runner = ScriptRunner()
@@ -29,9 +40,14 @@ class LineagePlusApp(ctk.CTk):
 
         # Window configuration
         self.title("LINEAGE+")
-        self.geometry("600x500")
+        self.geometry("600x500") #original build - 600x500
         self.resizable(False, False)
-        
+
+        self.page_container = ctk.CTkFrame(master=self, fg_color="transparent")
+        self.page_container.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        self.main_page = LineagePlusApp
+
 
 #"""IMAGE IMPORTS"""
 
@@ -66,7 +82,7 @@ class LineagePlusApp(ctk.CTk):
             title_image = CTkImage(
                 light_image=title_icon,
                 dark_image=title_icon,
-                size=(208, 34)  # Adjust size as needed
+                size=(208, 44)  # Adjust size as needed
             )
 
             #print("IMAGE LOADED!")
@@ -75,14 +91,13 @@ class LineagePlusApp(ctk.CTk):
             print(f"Error loading image: {e}")
             icon = None  # Fallback if image fails to load
 
-
 # MAIN HEADER
         header_container = ctk.CTkFrame(
             master=self,
             fg_color="transparent",
             height=100  # Match your title image height
         )
-        header_container.pack(side="top", fill="x", padx=30, pady=30)  # Automatic width
+        header_container.pack(side="top", fill="x", padx=30, pady=20)  # Automatic width
 
         # TITLE IMAGE
         title_image_label = ctk.CTkLabel(
@@ -103,56 +118,69 @@ class LineagePlusApp(ctk.CTk):
 
     #"""MAIN BUTTONS"""
 
-        # Plus button (placed absolutely)
+        run_button_path = os.path.join(script_dir, "images", "play.png")
+        run_button_img = CTkImage(Image.open(run_button_path), size=(24, 24))
+
+        # run button (placed absolutely)
         run_btn = ctk.CTkButton(
             master=header_container,
-            text="run",
+            text="",
             text_color="#858AE3",
+            image=run_button_img,
             font=("Arial", 18, "bold"),
-            width=20,
-            height=20,
+            width=24,
+            height=24,
             fg_color="transparent",
-            hover_color="#613DC1",
+            hover_color="#2a2a2a",
+            corner_radius=4,
             # corner_radius = 32, # CIRCULAR BUTTONS? WITH BORDERS?
-            # command=self.add_preset
+            command=lambda: self._run_preset_scripts()
         )
         # Place it at vertical center, near the right edge
-        run_btn.place(relx=1.0, rely=0.5, x=-62, anchor="e")
+        run_btn.place(relx=1.0, rely=0.5, x=-122, anchor="e")
+        ToolTip(run_btn, "Run")
 
-        # Minus button (placed absolutely)
+        stop_button_path = os.path.join(script_dir, "images", "stop.png")
+        stop_button_img = CTkImage(Image.open(stop_button_path), size=(24, 24))
+
+        # stop button (placed absolutely)
         stop_btn = ctk.CTkButton(
             master=header_container,
-            text="stop",
+            text="",
             text_color="#858AE3",
+            image=stop_button_img,
             font=("Arial", 18, "bold"),
-            width=25,
-            height=20,
+            width=24,
+            height=24,
             fg_color="transparent",
-            hover_color="#613DC1",
-            # command=self.remove_preset
+            hover_color="#2a2a2a",
+            corner_radius = 4,
+            command=lambda: self._stop_current_scripts()
         )
         # Place it to the left of plus button, also centered vertically
-        stop_btn.place(relx=1.0, rely=0.5, x=-2, anchor="e")
+        stop_btn.place(relx=1.0, rely=0.5, x=-62, anchor="e")
+        ToolTip(stop_btn, "Stop")
 
-    #"""HEALER ICON"""
-        """
-        healer_image_label = ctk.CTkLabel(
+        at_sign_path = os.path.join(script_dir, "images", "at-sign.png")
+        at_button_img = CTkImage(Image.open(at_sign_path), size=(24, 24))
+
+        # about button (placed absolutely)
+        at_btn = ctk.CTkButton(
             master=header_container,
-            image=healer_image,  # Your healer icon
-            text=""  # No text
-        )
-        healer_image_label.pack(side="left", padx=(0, 10))  # 10px spacing between icon and text
-        """
-        """
-        image_label = ctk.CTkLabel(
-            master=title_label,
-            image=healer_image,
+            text="",
+            text_color="#858AE3",
+            image=at_button_img,
+            font=("Arial", 18, "bold"),
+            width=24,
+            height=24,
             fg_color="transparent",
-            text=""
+            hover_color="#2a2a2a",
+            corner_radius = 4,
+            command=self.show_about  
         )
-        image_label.place(x=140, y=10)
-        """
-
+        # Place it to the left of plus button, also centered vertically
+        at_btn.place(relx=1.0, rely=0.5, x=-2, anchor="e")
+        ToolTip(at_btn, "About")
 
 #"""PRESETS SECTION"""
 
@@ -164,7 +192,7 @@ class LineagePlusApp(ctk.CTk):
             fg_color="#1c1e1f",
             border_color="#1c1e1f",
             border_width=4,
-            corner_radius=16, # UNDECIDED VISUAL CHANGE (rounded area or no)
+            corner_radius=8, # UNDECIDED VISUAL CHANGE (rounded area or no)
             width=285,    # width
             height=380    # height
         )
@@ -179,7 +207,15 @@ class LineagePlusApp(ctk.CTk):
         )
 
         self.preset_list.place(x=14, y=144)
+        # self.preset_list._scrollbar.grid_forget()  # Hide the scrollbar
 
+        # (Idea for side scroll bar currently opting to just hide it)
+        self.preset_list._scrollbar.configure(
+            fg_color="#1c1e1f",
+            button_color="#2a2a2a",
+            button_hover_color="#303030"
+        )
+        
         for preset in self.preset_manager.list_presets():
             btn = ctk.CTkButton(
                 master=self.preset_list,
@@ -242,6 +278,7 @@ class LineagePlusApp(ctk.CTk):
         )
         # Place it at vertical center, near the right edge
         preset_plus_btn.place(relx=1.0, rely=0.5, x=-50, anchor="e")
+        ToolTip(preset_plus_btn, "+ Preset")
 
         trash_path = os.path.join(script_dir, "images", "trash.png")
         trash_img = CTkImage(Image.open(trash_path), size=(24, 24))
@@ -261,7 +298,7 @@ class LineagePlusApp(ctk.CTk):
         )
         # Place it to the left of plus button, also centered vertically
         preset_minus_btn.place(relx=1.0, rely=0.5, x=-7, anchor="e")
-
+        ToolTip(preset_minus_btn, "- Preset")
 
 #"""SCRIPTS SECTION"""
 
@@ -272,7 +309,7 @@ class LineagePlusApp(ctk.CTk):
             fg_color="#1c1e1f",
             border_color="#1c1e1f",
             border_width=4,
-            corner_radius=16, # UNDECIDED VISUAL CHANGE (rounded area or no)
+            corner_radius=8, # UNDECIDED VISUAL CHANGE (rounded area or no)
             width=285,    # width
             height=380    # height
         )
@@ -287,6 +324,12 @@ class LineagePlusApp(ctk.CTk):
         )
 
         self.scripts_list.place(x=309, y=144)
+
+        self.scripts_list._scrollbar.configure(
+            fg_color="#1c1e1f",
+            button_color="#2a2a2a",
+            button_hover_color="#303030"
+        )        
 
     #"""SCRIPTS HEADER"""
 
@@ -333,6 +376,7 @@ class LineagePlusApp(ctk.CTk):
         )
         # Place it at vertical center, near the right edge
         scripts_plus_btn.place(relx=1.0, rely=0.5, x=-50, anchor="e")
+        ToolTip(scripts_plus_btn, "+ Script")
 
         # Minus button (placed absolutely)
         scripts_minus_btn = ctk.CTkButton(
@@ -349,106 +393,7 @@ class LineagePlusApp(ctk.CTk):
         )
         # Place it to the left of plus button, also centered vertically
         scripts_minus_btn.place(relx=1.0, rely=0.5, x=-7, anchor="e")
-
-
-#"""OVERLAYS SECTION"""
-    """
-    #OVERLAYS FRAME
-        # Right Frame (Scripts) - positioned to the right of presetFrame
-        overlaysFrame = ctk.CTkFrame(
-            master=self,
-            fg_color="#090d0d",
-            border_color="#613DC1",
-            border_width=4,
-            corner_radius=0, # STILL UNDECIDED VISUAL CHANGE
-            width=285,
-            height=185
-        )
-        overlaysFrame.place(x=10+285+10, y=110 + 110 + 30 + 10 + 10 + 10 + 10 + 10 + 5)  # 10px gap from presetFrame and below scriptsFram
-
-    #OVERLAYS HEADER
-        overlays_header_frame = ctk.CTkFrame(  # Changed from CTkLabel to CTkFrame
-            master=overlaysFrame,
-            fg_color="#858AE3",
-            corner_radius=0,
-            height=30,
-            width = -8
-        )
-        overlays_header_frame.place(x=4, y=4, relwidth=0.97)
-
-        # Header Text Label (added first so buttons appear on top)
-        overlays_header_text = ctk.CTkLabel(
-            master=overlays_header_frame,
-            text="Overlays",
-            font=("Arial", 16, "bold"),
-            text_color="#2C0735",  # Dark text for contrast
-            anchor="w",  # Left-aligned
-            fg_color="transparent",  # Transparent background
-            height=30
-        )
-        overlays_header_text.place(x=10, y=0)  # 10px left padding
-
-    #SCRIPTS BUTTONS
-
-        # Plus button (placed absolutely)
-        overlays_plus_btn = ctk.CTkButton(
-            master=overlays_header_frame,
-            text="+",
-            text_color="#2C0735",
-            font=("Arial", 18, "bold"),
-            width=20,
-            height=20,
-            fg_color="transparent",
-            hover_color="#613DC1",
-            # corner_radius = 32, # CIRCULAR BUTTONS? WITH BORDERS?
-            # command=self.add_preset
-        )
-        # Place it at vertical center, near the right edge
-        overlays_plus_btn.place(relx=1.0, rely=0.5, x=-32, anchor="e")
-
-        # Minus button (placed absolutely)
-        overlays_minus_btn = ctk.CTkButton(
-            master=overlays_header_frame,
-            text="-",
-            text_color="#2C0735",
-            font=("Arial", 18, "bold"),
-            width=25,
-            height=20,
-            fg_color="transparent",
-            hover_color="#613DC1",
-            # command=self.remove_preset
-        )
-        # Place it to the left of plus button, also centered vertically
-        overlays_minus_btn.place(relx=1.0, rely=0.5, x=-2, anchor="e")
-    """
-
-#"""COOLDOWNS SECTION"""
-
-
-        # Right Frame (Scripts) - positioned to the right of presetFrame
-    """
-        cooldownsFrame = ctk.CTkFrame(
-            master=self,
-            fg_color="#8D6F3A",
-            border_color="#FFCC70",
-            border_width=2,
-            width=285,
-            height=120
-        )
-        cooldownsFrame.place(x=10+285+10, y=110 + 110 + 110 + 10 + 10 + 10 + 10)  # 10px gap from presetFrame and below scriptsFram
-
-        cooldowns_header_label = ctk.CTkLabel(
-            master=cooldownsFrame,
-            text="Cooldowns",
-            font=("Arial", 16),
-            fg_color="#5D4A2A",
-            height=30,
-            corner_radius=0,
-            anchor="w"
-        )
-        cooldowns_header_label.place(x=0, y=0, relwidth=1.0)
-    """
-
+        ToolTip(scripts_minus_btn, "- Script")
 
 #"""METHODS - probably need their own files in backend section"""
 
@@ -472,8 +417,9 @@ class LineagePlusApp(ctk.CTk):
                 try:
                     self.preset_manager.save_preset(name, scripts=[])
                     #print("PRESET IS SAVED CORRECTLY")
+                    self.current_preset = name  # Set the newly created preset as current
                     self._refresh_presets()
-                    #print("PRESETS GET REFRESHED")
+                    self._on_preset_select(name)
                     dialog.destroy()
                     #print("DIALOG GETS DESTROYED")
                 except Exception as e:
@@ -520,7 +466,9 @@ class LineagePlusApp(ctk.CTk):
             try:
                 self.preset_manager.delete_preset(self.current_preset)
                 self.current_preset = None
+                self.current_script = None
                 self._refresh_presets()
+                self._refresh_scripts(None) 
             except Exception as e:
                 CTkMessagebox(
                     title="Error",
@@ -553,7 +501,7 @@ class LineagePlusApp(ctk.CTk):
                 fg_color="#2a2a2a",
                 text_color="#cbcbcb",
                 font=("Arial", 16, "bold"),
-                corner_radius=16
+                corner_radius=4
             )
             btn.pack(pady=2)
             self.preset_buttons[preset] = btn
@@ -565,6 +513,7 @@ class LineagePlusApp(ctk.CTk):
         """Handle user selection from the presets list"""
         previous_selected = self.current_preset
         self.current_preset = preset_name
+        self.current_script = None
         #print(f"{preset_name} selected (Previous was {previous_selected})")
         self._refresh_scripts(preset_name)
 
@@ -586,24 +535,32 @@ class LineagePlusApp(ctk.CTk):
 
     def _add_script_to_preset(self, preset_name):
         """Open file explorer to add a .ahk script to the preset"""
-        # Open file explorer to choose a script
-        script_path = filedialog.askopenfilename(
-            title="Select Script File", 
-            filetypes=(("AutoHotkey Scripts", "*.ahk"), ("All Files", "*.*"))
-        )
+        if self.current_preset != None:
+            script_path = filedialog.askopenfilename(
+                title="Select Script File", 
+                filetypes=(("AutoHotkey Scripts", "*.ahk"), ("All Files", "*.*"))
+            )
 
-        if script_path:  # Only proceed if the user selected a file
-            script_name = script_path.split('/')[-1]  # Extract the file name from the path
-            try:
-                # Add the selected script to the preset
-                self.preset_manager.add_script_to_preset(preset_name, script_name)
-                self._refresh_scripts(preset_name)  # Refresh the script list
-            except Exception as e:
-                ctk.CTkMessagebox(
-                    title="Error",
-                    message=f"Failed to add script: {str(e)}",
-                    icon="cancel"
-                )
+            if script_path:  # Only proceed if the user selected a file
+                try:
+                    # Pass the full path to the preset manager
+                    self.preset_manager.add_script_to_preset(preset_name, script_path)
+                    self._refresh_scripts(preset_name)  # Refresh the script list
+                except Exception as e:
+                    ctk.CTkMessagebox(
+                        title="Error",
+                        message=f"Failed to add script: {str(e)}",
+                        icon="cancel"
+                    )
+
+        else:
+            CTkMessagebox(
+                title="No Preset Selected",
+                message="Please select a preset first.",
+                icon="warning"
+            )
+            #print("No preset selected. Select a preset first")
+
 
     def _refresh_scripts(self, preset_name):
         """Reload and display scripts for the selected preset"""
@@ -669,7 +626,7 @@ class LineagePlusApp(ctk.CTk):
         if not self.current_script:
             CTkMessagebox(
                 title="No Preset Selected",
-                message="Please select a preset to remove.",
+                message="Please select a script to remove.",
                 icon="warning"
             )
             return
@@ -684,9 +641,9 @@ class LineagePlusApp(ctk.CTk):
 
         if confirm.get() == "Yes":
             try:
-                self.preset_manager.delete_script(self.current_script)
+                self.preset_manager.remove_script_from_preset(self.current_preset, self.current_script)
                 self.current_script = None
-                self._refresh_scripts()
+                self._refresh_scripts(self.current_preset)
             except Exception as e:
                 CTkMessagebox(
                     title="Error",
@@ -696,6 +653,61 @@ class LineagePlusApp(ctk.CTk):
 
         for name, btn in self.script_buttons.items():
             btn.configure(fg_color="#2a2a2a", text_color="#cbcbcb", hover_color = "#303030")
+
+
+    def _run_preset_scripts(self):
+        if not self.current_preset:
+            CTkMessagebox(
+                title="No Preset Selected",
+                message="Please select a preset before running.",
+                icon="warning"
+            )
+            return
+
+        scripts = self.preset_manager.list_scripts(self.current_preset)
+        script_dir = self.preset_manager.scripts_dir
+
+        errors = self.script_runner.run_scripts(scripts, script_dir)
+
+        if errors:
+            error_messages = "\n".join(f"{name}: {msg}" for name, msg in errors)
+            CTkMessagebox(
+                title="Script Errors",
+                message=error_messages,
+                icon="cancel"
+            )
+
+    def _stop_current_scripts(self):
+        stopped = self.script_runner.stop_scripts()
+
+        if stopped:
+            msg = "Stopped the following script(s):\n" + "\n".join(stopped)
+            icon = "check"
+        else:
+            msg = "No running AHK scripts found to stop."
+            icon = "warning"
+
+        CTkMessagebox(
+            title="Script Stop Result",
+            message=msg,
+            icon=icon
+        )
+
+    def show_about(self):
+        # create the AboutPage as a full-window overlay
+        self.about_page = AboutPage(
+            master=self,                  # parent is your root window
+            close_callback=self.close_about
+        )
+        # stretch it over the entire window
+        self.about_page.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    def close_about(self):
+        # destroy the overlay and all its children
+        if hasattr(self, "about_page"):
+            self.about_page.destroy()
+            del self.about_page
+
 
 if __name__ == "__main__":
     app = LineagePlusApp()
