@@ -1,13 +1,21 @@
 import os # for file operations
+import sys
 import json # for data serialization and file reading
 import shutil # for file movement and removal
 from datetime import datetime # for timestamping
 from typing import Dict, List, Optional
 
+
+def get_base_path():
+    import sys
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)  # Running from .exe
+    return os.path.dirname(os.path.abspath(__file__))  # Running from source
+
 # Class to manage presets. Allows the user to add various files to the preset to automatically run them
 class PresetManager:
     def __init__(self, presets_dir: str = "presets", scripts_dir: str = "scripts"):
-        base_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory this script is in
+        base_dir = get_base_path()
         self.presets_dir = os.path.join(base_dir, presets_dir)
         self.scripts_dir = os.path.join(base_dir, scripts_dir)
         self._ensure_directories_exist()
