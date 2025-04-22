@@ -1,4 +1,5 @@
 # Lineage+
+![Windows Only](https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white)
 
 **Lineage+** is an application designed to help you quickly create and manage character presets for the sleeper hit game **Rogue Lineage**. It allows you to easily add multiple hotkey and macro scripts (AutoHotKey files) to be used in the game.
 
