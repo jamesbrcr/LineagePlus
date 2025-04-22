@@ -26,5 +26,7 @@
 ---
 
 Enjoy smoother gameplay with automated scripts in **Rogue Lineage**!
+Feel free to reuse any code and cite me!
+Reach out at crowe@cs.wisc.edu
 
 ---
