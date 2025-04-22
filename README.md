@@ -1,0 +1,28 @@
+# Lineage+
+
+**Lineage+** is an application designed to help you quickly create and manage character presets for the sleeper hit game **Rogue Lineage**. It allows you to easily add multiple hotkey and macro scripts (AutoHotKey files) to be used in the game.
+
+- Create and manage character presets.
+- Add **AutoHotKey** scripts to the presets.
+- Automatically run and end multiple scripts at once for improved gameplay automation.
+
+1. **Download the Application:**
+   - Go to the [Releases](https://github.com/jamesbrcr/LineagePlus/releases) tab of the GitHub repository.
+   - Download the latest `.exe` file (e.g., `Lineage.Plus.exe`).
+   
+2. **Create a Shortcut (Optional):**
+   - After downloading the `.exe` file, you can create a shortcut to easily launch the application:
+     - Right-click the `.exe` file.
+     - Select **Send to > Desktop (create shortcut)**.
+
+3. **Run the Application:**
+   - Double-click the shortcut or the `.exe` file to launch **Lineage+**.
+
+### Version:
+- **v1.0.0**
+
+---
+
+Enjoy smoother gameplay with automated scripts in **Rogue Lineage**!
+
+---
