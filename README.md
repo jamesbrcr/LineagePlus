@@ -7,15 +7,19 @@
 - Automatically run and end multiple scripts at once for improved gameplay automation.
 
 1. **Download the Application:**
+   
+   [![Download](https://img.shields.io/badge/Download-LineagePlus-green.svg)](https://github.com/jamesbrcr/LineagePlus/releases/download/v1.0.1/Lineage+.exe)
+   
+OR
    - Go to the [Releases](https://github.com/jamesbrcr/LineagePlus/releases) tab of the GitHub repository.
    - Download the latest `.exe` file (e.g., `Lineage+.exe`).
    
-2. **Create a Shortcut (Optional):**
+3. **Create a Shortcut (Optional):**
    - After downloading the `.exe` file, you can create a shortcut to easily launch the application:
      - Right-click the `.exe` file.
      - Select **Send to > Desktop (create shortcut)**.
 
-3. **Run the Application:**
+4. **Run the Application:**
    - Double-click the shortcut or the `.exe` file to launch **Lineage+**.
 
 ### Version:
