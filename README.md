@@ -19,8 +19,10 @@
    - Double-click the shortcut or the `.exe` file to launch **Lineage+**.
 
 ### Version:
-- **v1.0.0**
+- **v1.0.1**
 
+   - Fixed issues with saving files between application usage.
+   
 ---
 
 Enjoy smoother gameplay with automated scripts in **Rogue Lineage**!

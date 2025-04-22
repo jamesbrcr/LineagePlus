@@ -67,7 +67,7 @@ class AboutPage(ctk.CTkFrame):
         downloads = self.get_download_count()
         downloads_label = ctk.CTkLabel(
             self,
-            text=f"Version 1.0.0    |    {downloads} Downloads",
+            text=f"Version 1.0.1    |    {downloads} Downloads",
             text_color="#cbcbcb",
             font=("Arial", 16),
         )
