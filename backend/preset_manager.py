@@ -7,10 +7,12 @@ from typing import Dict, List, Optional
 
 
 def get_base_path():
-    import sys
-    if getattr(sys, "frozen", False):
-        return os.path.dirname(sys.executable)  # Running from .exe
-    return os.path.dirname(os.path.abspath(__file__))  # Running from source
+    if getattr(sys, 'frozen', False):
+        # Running as bundled .exe
+        return os.path.join(os.getenv('APPDATA'), "LineagePlusApp")
+    else:
+        # Running from source
+        return os.path.dirname(os.path.abspath(__file__))
 
 # Class to manage presets. Allows the user to add various files to the preset to automatically run them
 class PresetManager:
