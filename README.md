@@ -8,7 +8,7 @@
 
 1. **Download the Application:**
    - Go to the [Releases](https://github.com/jamesbrcr/LineagePlus/releases) tab of the GitHub repository.
-   - Download the latest `.exe` file (e.g., `Lineage.Plus.exe`).
+   - Download the latest `.exe` file (e.g., `Lineage+.exe`).
    
 2. **Create a Shortcut (Optional):**
    - After downloading the `.exe` file, you can create a shortcut to easily launch the application:
